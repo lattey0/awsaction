@@ -5,7 +5,6 @@ terraform {
       version = "~> 5.0"
     }
   }
-
   required_version = ">= 1.3.0"
 
   backend "s3" {
@@ -15,86 +14,66 @@ terraform {
   }
 }
 
-
 provider "aws" {
-  region     = "us-east-1"
+  region = "us-east-1"
 }
 
-resource "aws_iam_role" "asutoshrole" {
+resource "aws_iam_role" "ec2_s3_writer_role" {
   name = "asutoshrole"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
-      }
-    ]
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
   })
-  
-
-  tags = {
-    Creator = "asutosh"
-  }
 }
 
-resource "aws_iam_role_policy" "asutosh_s3_write" {
-  name = "asutosh-s3-write"
-  role = aws_iam_role.asutoshrole.id
+resource "aws_iam_role_policy" "s3_write_policy" {
+  name = "s3-write-policy"
+  role = aws_iam_role.ec2_s3_writer_role.id
 
   policy = jsonencode({
     Version = "2012-10-17",
-    Statement = [
-      {
-        Effect   = "Allow",
-        Action   = ["s3:PutObject"],
-        Resource = "arn:aws:s3:::terminus-bucket-123/*"
-      }
-    ]
+    Statement = [{
+      Effect = "Allow",
+      Action = ["s3:PutObject"],
+      Resource = "arn:aws:s3:::asutosh-secure-bucket/*"
+    }]
   })
 }
 
-resource "aws_iam_instance_profile" "asutosh_profile" {
+resource "aws_iam_instance_profile" "profile" {
   name = "asutosh-profile"
-  role = aws_iam_role.asutoshrole.name
+  role = aws_iam_role.ec2_s3_writer_role.name
 }
 
-resource "aws_instance" "terminus_ec2" {
+resource "aws_instance" "ec2_instance" {
   ami                         = "ami-05ffe3c48a9991133"
   instance_type               = "t2.micro"
   subnet_id                   = "subnet-092775186223b72ed"
   vpc_security_group_ids      = ["sg-029d099bf09a3033f"]
   key_name                    = "asutosh-key"
   associate_public_ip_address = true
-  iam_instance_profile        = aws_iam_instance_profile.asutosh_profile.name
-
+  iam_instance_profile        = aws_iam_instance_profile.profile.name
 
   metadata_options {
     http_tokens = "required"
   }
 
-  
   root_block_device {
     encrypted = true
   }
 
   tags = {
-    Name    = "terminus-ec2"
-    Creator = "asutosh"
+    Name = "terminus-ec2"
   }
 }
 
-output "iam_role_arn" {
-  value = aws_iam_role.asutoshrole.arn
+output "ec2_role_arn" {
+  value = aws_iam_role.ec2_s3_writer_role.arn
 }
-
-output "instance_id" {
-  value = aws_instance.terminus_ec2.id
-}
-
-
-
