@@ -1,4 +1,4 @@
-# .github/workflows/tag-and-release.yml
+
 name: Tag and Release
 
 on:
@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: write # Required to create tags and releases
+  contents: write 
 
 jobs:
   tag:
@@ -17,20 +17,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          # We need to fetch all history and tags to correctly calculate the next version
           fetch-depth: 0 
 
       - name: Bump version and push tag
         id: tag_version
-        uses: anothrNick/github-tag-action@1.67.0 # Use a specific version for stability
+        uses: anothrNick/github-tag-action@1.67.0 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WITH_V: true              # Puts a "v" in front of the tag (e.g., v1.0.0)
-          DEFAULT_BUMP: "patch"     # If no conventional commit is found, default to a patch bump
+          WITH_V: true          
+          DEFAULT_BUMP: "patch"     
           
       - name: Create GitHub Release
         uses: actions/create-release@v1
-        if: ${{ steps.tag_version.outputs.new_tag }} # Only run if a new tag was created
+        if: ${{ steps.tag_version.outputs.new_tag }} 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

@@ -14,7 +14,7 @@ resource "aws_iam_role" "github_actions_oidc" {
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           },
-          # CORRECTED: Allow any branch, pull request, or tag from your specific repository
+          
           StringLike = {
             "token.actions.githubusercontent.com:sub" = "repo:asutosh-g/your-repo-name:*"
           }
