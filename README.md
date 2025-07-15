@@ -1,4 +1,0 @@
-# awsaction
-awsaction
-drfghbjnm,
-ghj
