@@ -14,14 +14,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug repo name
+        run: echo "Repo: $GITHUB_REPOSITORY"
       - name: Configure AWS credentials deploy and prod
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::702865854817:role/GitHubActionsRole
           aws-region: us-east-1
       
-      - name: Debug repo name
-        run: echo "Repo: $GITHUB_REPOSITORY"
+      
 
       - name: Download Artifact
         uses: dawidd6/action-download-artifact@v4
