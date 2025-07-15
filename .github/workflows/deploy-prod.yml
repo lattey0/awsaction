@@ -1,3 +1,14 @@
+# .github/workflows/deploy.yml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read  # Required to checkout the code
+
 jobs:
   deploy:
     name: Terraform Plan and Apply
