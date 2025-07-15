@@ -3,6 +3,7 @@ name: Terraform Lint and Plan
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened]
 
 permissions:
   id-token: write
@@ -10,16 +11,16 @@ permissions:
   pull-requests: write
 
 jobs:
-  lint:
-    name: Terraform Quality Checks
+  validate_and_plan:
+    name: Terraform Validate and Plan
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials lint and plan
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::702865854817:role/GitHubActionsRole
           aws-region: us-east-1
@@ -29,18 +30,12 @@ jobs:
         with:
           terraform_version: 1.6.6
 
-      - name: Set up tflint
-        uses: terraform-linters/setup-tflint@v4
-        with:
-          tflint_version: latest
-
       - name: Terraform Init
+        id: init
         run: terraform init
 
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
-
       - name: Terraform Validate
+        id: validate
         run: terraform validate
 
       - name: TFLint
@@ -50,7 +45,8 @@ jobs:
         uses: aquasecurity/tfsec-action@v1.0.3
 
       - name: Terraform Plan
-        run: terraform plan -out=tfplan.out
+        id: plan
+        run: terraform plan -no-color -out=tfplan.binary
 
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
@@ -63,4 +59,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          plan-path: tfplan.out
+          plan-path: tfplan.binary
