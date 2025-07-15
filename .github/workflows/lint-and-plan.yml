@@ -1,0 +1,93 @@
+name: Terraform Lint and Plan
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate_and_plan:
+    name: Terraform Validate and Plan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials lint and plan
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
+
+      - name: Set up TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      # repo1ec2 steps
+      - name: Terraform Init repo1ec2
+        run: terraform init
+        working-directory: repo1ec2
+
+      - name: Terraform Validate repo1ec2
+        run: terraform validate
+        working-directory: repo1ec2
+
+      - name: TFLint repo1ec2
+        run: tflint --recursive
+        working-directory: repo1ec2
+
+      - name: Security Scan (tfsec) repo1ec2
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          directory: repo1ec2
+
+      - name: Terraform Plan repo1ec2
+        run: terraform plan -no-color -out=tfplan.binary
+        working-directory: repo1ec2
+
+      - name: Upload Plan Artifact repo1ec2
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-repo1ec2
+          path: repo1ec2/tfplan.binary
+
+      # repo2s3 steps
+      - name: Terraform Init repo2s3
+        run: terraform init
+        working-directory: repo2s3
+
+      - name: Terraform Validate repo2s3
+        run: terraform validate
+        working-directory: repo2s3
+
+      - name: TFLint repo2s3
+        run: tflint --recursive
+        working-directory: repo2s3
+
+      - name: Security Scan (tfsec) repo2s3
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          directory: repo2s3
+
+      - name: Terraform Plan repo2s3
+        run: terraform plan -no-color -out=tfplan.binary
+        working-directory: repo2s3
+
+      - name: Upload Plan Artifact repo2s3
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-repo2s3
+          path: repo2s3/tfplan.binary
