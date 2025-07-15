@@ -26,11 +26,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: latest
+
+      - name: Set up TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
 
       - name: Terraform Init
         id: init
@@ -54,7 +58,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: tfplan.out
+          path: tfplan.binary
 
       - name: Comment Plan on PR
         uses: GetTerminus/terraform-pr-commenter@v1
