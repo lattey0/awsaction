@@ -7,7 +7,7 @@ resource "aws_iam_role" "github_actions_oidc" {
       {
         Effect = "Allow",
         Principal = {
-          Federated = "arn:aws:iam::<your-account-id>:oidc-provider/token.actions.githubusercontent.com"
+          Federated = "arn:aws:iam::702865854817:oidc-provider/token.actions.githubusercontent.com"
         },
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
