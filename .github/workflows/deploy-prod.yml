@@ -21,7 +21,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Download Artifact
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v4
         with:
           name: tfplan
           path: .
