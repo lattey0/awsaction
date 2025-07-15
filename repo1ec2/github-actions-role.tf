@@ -22,6 +22,7 @@ resource "aws_iam_role" "github_actions_oidc" {
     ]
   })
 
+
   tags = {
     Creator = "asutosh"
   }
