@@ -26,6 +26,23 @@ locals {
   ec2_role_arn = data.terraform_remote_state.ec2_project.outputs.ec2_role_arn
 }
 
+# Create customer-managed KMS key for encryption
+resource "aws_kms_key" "s3_key" {
+  description             = "Customer managed KMS key for S3 bucket encryption"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+
+  tags = {
+    Name    = "AsutoshS3KMSKey"
+    Creator = "asutosh"
+  }
+}
+
+resource "aws_kms_alias" "s3_key_alias" {
+  name          = "alias/asutosh-s3-key"
+  target_key_id = aws_kms_key.s3_key.id
+}
+
 # Create secure S3 bucket
 resource "aws_s3_bucket" "secure_bucket" {
   bucket        = "asutosh-secure-bucket"
@@ -36,13 +53,14 @@ resource "aws_s3_bucket" "secure_bucket" {
   }
 }
 
-# Enable default encryption using AWS-managed key (you can also use KMS CMK if needed)
+# Enable default encryption using customer-managed KMS key
 resource "aws_s3_bucket_server_side_encryption_configuration" "sse" {
   bucket = aws_s3_bucket.secure_bucket.id
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256" # change to "aws:kms" if using a customer key
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.s3_key.arn
     }
   }
 }
@@ -56,7 +74,7 @@ resource "aws_s3_bucket_versioning" "versioning" {
   }
 }
 
-# Enable logging (requires a target bucket, here we reuse the same — ideally use separate log bucket)
+# Enable logging - NOTE: Ideally, use a separate bucket for logs to avoid recursion
 resource "aws_s3_bucket_logging" "log" {
   bucket = aws_s3_bucket.secure_bucket.id
 
