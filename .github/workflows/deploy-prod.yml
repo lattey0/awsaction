@@ -1,9 +1,11 @@
-# .github/workflows/deploy.yml
+# .github/workflows/deploy-prod.yml
 name: Deploy to Production
 
 on:
   push:
-    branches: [main]
+    # This is the key change: trigger on SemVer tags
+    tags:
+      - 'v*.*.*'
 
 permissions:
   id-token: write # Required for OIDC
@@ -19,6 +21,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # This step is useful for getting the version number from the tag
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
       - name: Configure AWS credentials deploy and prod
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -31,6 +38,9 @@ jobs:
         with:
           terraform_version: latest
 
+      # You could even use the version number in your Terraform variables if needed!
+      # For example: run: terraform plan -var="app_version=${{ env.VERSION }}"
+      
       # repo1ec2 deploy
       - name: Terraform Init repo1ec2
         run: terraform init
