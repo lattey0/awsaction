@@ -19,7 +19,9 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::702865854817:role/GitHubActionsRole
           aws-region: us-east-1
-
+      
+      - name: Debug repo name
+        run: echo "Repo: $GITHUB_REPOSITORY"
 
       - name: Download Artifact
         uses: dawidd6/action-download-artifact@v4
