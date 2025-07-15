@@ -13,7 +13,8 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# IAM Role for EC2 with trust policy limited to EC2 service only
+
+
 resource "aws_iam_role" "ec2_s3_writer_role" {
   name = "ec2-s3-writer-role"
 
@@ -35,7 +36,7 @@ resource "aws_iam_role" "ec2_s3_writer_role" {
   }
 }
 
-# IAM Policy to allow writing only to the specific S3 bucket
+
 resource "aws_iam_policy" "write_to_s3_policy" {
   name = "WriteToS3Policy-v2"
 
@@ -69,19 +70,19 @@ resource "aws_iam_policy" "write_to_s3_policy" {
   }
 }
 
-# Attach the policy to the role
+
 resource "aws_iam_role_policy_attachment" "attach_policy" {
   role       = aws_iam_role.ec2_s3_writer_role.name
   policy_arn = aws_iam_policy.write_to_s3_policy.arn
 }
 
-# Instance Profile needed for EC2 to use the IAM role
+
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "ec2-s3-profile-v2"
   role = aws_iam_role.ec2_s3_writer_role.name
 }
 
-# EC2 Instance with IAM instance profile, EBS encryption, and IMDSv2 enforcement
+
 resource "aws_instance" "asutosh_ec2" {
   ami                         = "ami-05ffe3c48a9991133"
   instance_type               = "t2.micro"
@@ -91,13 +92,13 @@ resource "aws_instance" "asutosh_ec2" {
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
 
-  # ✅ Enforce IMDSv2
+
   metadata_options {
     http_tokens   = "required"
     http_endpoint = "enabled"
   }
 
-  # ✅ Enable encryption for the root block device
+
   root_block_device {
     encrypted = true
   }
@@ -108,7 +109,7 @@ resource "aws_instance" "asutosh_ec2" {
   }
 }
 
-# Outputs for remote state consumption
+
 output "ec2_instance_arn" {
   value = aws_instance.asutosh_ec2.arn
 }
