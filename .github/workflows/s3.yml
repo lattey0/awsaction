@@ -1,0 +1,43 @@
+name: Deploy S3 Infrastructure
+
+on:
+  push:
+    paths:
+      - "s3/**"
+      - ".github/workflows/s3.yml"
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["EC2 Terraform Deploy"]
+    types:
+      - completed
+
+jobs:
+  terraform:
+    name: S3 Terraform Apply
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.2
+
+      - name: Terraform Init
+        working-directory: ./s3
+        run: terraform init
+
+      - name: Terraform Format Check
+        working-directory: ./s3
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        working-directory: ./s3
+        run: terraform validate
+
+      - name: Terraform Apply
+        working-directory: ./s3
+        run: terraform apply -auto-approve
