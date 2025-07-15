@@ -39,30 +39,29 @@ resource "aws_iam_policy" "write_to_s3_policy" {
   name = "WriteToS3Policy-v2"
 
   policy = jsonencode({
-  Version = "2012-10-17",
-  Statement = [
-    {
-      Effect = "Allow",
-      Action = [
-        "s3:PutObject",
-        "s3:ListBucket"  
-      ],
-      Resource = [
-        "arn:aws:s3:::asutosh-secure-bucket",
-        "arn:aws:s3:::asutosh-secure-bucket/*"
-      ]
-    },
-    {
-      Effect = "Allow",
-      Action = ["s3:ListBucket", "s3:GetObject"],
-      Resource = [
-        "arn:aws:s3:::adhikari-bucket1",
-        "arn:aws:s3:::adhikari-bucket1/*"
-      ]
-    }
-  ]
-})
-
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:PutObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          "arn:aws:s3:::asutosh-secure-bucket",
+          "arn:aws:s3:::asutosh-secure-bucket/*"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = ["s3:ListBucket", "s3:GetObject"],
+        Resource = [
+          "arn:aws:s3:::adhikari-bucket1",
+          "arn:aws:s3:::adhikari-bucket1/*"
+        ]
+      }
+    ]
+  })
 
   tags = {
     Creator = "asutosh"
@@ -81,7 +80,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_s3_writer_role.name
 }
 
-# EC2 Instance with IAM instance profile attached
+# EC2 Instance with IAM instance profile, EBS encryption, and IMDSv2 enforcement
 resource "aws_instance" "asutosh_ec2" {
   ami                         = "ami-05ffe3c48a9991133"
   instance_type               = "t2.micro"
@@ -90,6 +89,17 @@ resource "aws_instance" "asutosh_ec2" {
   key_name                    = "asutosh-key"
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+
+  # ✅ Enforce IMDSv2
+  metadata_options {
+    http_tokens   = "required"
+    http_endpoint = "enabled"
+  }
+
+  # ✅ Enable encryption for the root block device
+  root_block_device {
+    encrypted = true
+  }
 
   tags = {
     Name    = "asutosh-ec2"

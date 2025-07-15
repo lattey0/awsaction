@@ -36,6 +36,43 @@ resource "aws_s3_bucket" "secure_bucket" {
   }
 }
 
+# Enable default encryption using AWS-managed key (you can also use KMS CMK if needed)
+resource "aws_s3_bucket_server_side_encryption_configuration" "sse" {
+  bucket = aws_s3_bucket.secure_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256" # change to "aws:kms" if using a customer key
+    }
+  }
+}
+
+# Enable versioning
+resource "aws_s3_bucket_versioning" "versioning" {
+  bucket = aws_s3_bucket.secure_bucket.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# Enable logging (requires a target bucket, here we reuse the same — ideally use separate log bucket)
+resource "aws_s3_bucket_logging" "log" {
+  bucket = aws_s3_bucket.secure_bucket.id
+
+  target_bucket = aws_s3_bucket.secure_bucket.id
+  target_prefix = "log/"
+}
+
+# Block all public access
+resource "aws_s3_bucket_public_access_block" "block" {
+  bucket                  = aws_s3_bucket.secure_bucket.id
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
+}
+
 # Bucket policy allowing only EC2 IAM role to put objects
 resource "aws_s3_bucket_policy" "bucket_policy" {
   bucket = aws_s3_bucket.secure_bucket.id
