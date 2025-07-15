@@ -14,8 +14,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Debug repo name
-        run: echo "Repo: $GITHUB_REPOSITORY"
       - name: Configure AWS credentials deploy and prod
         uses: aws-actions/configure-aws-credentials@v3
         with:
